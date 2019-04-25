@@ -82,8 +82,8 @@ class FeedbackInterfaceViewController: UIViewController {
         imagePreviewButton.addTarget(self, action: #selector(imageButtonPressed), for: .touchUpInside)
         
         let notificationCenter = NotificationCenter.default
-        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillHideNotification, object: nil)
-        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: Notification.Name.UIKeyboardWillHide, object: nil)
+        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: Notification.Name.UIKeyboardWillChangeFrame, object: nil)
         
         if let _ = Helpers.email() {
             titleField.becomeFirstResponder()
@@ -127,6 +127,7 @@ class FeedbackInterfaceViewController: UIViewController {
             }
         }
     }
+    
     
     private func showNotification(title: String, message: String) {
         let vc = UIAlertController(title: title, message: message, preferredStyle: .alert)
@@ -175,6 +176,11 @@ class FeedbackInterfaceViewController: UIViewController {
     private func showImageOptions() {
         let actionSheet = UIAlertController(title: "Screenshot", message: nil, preferredStyle: .actionSheet)
         
+        let viewAction = UIAlertAction(title: "View", style: .default) { (action) in
+            self.showImagePreview()
+        }
+        actionSheet.addAction(viewAction)
+        
         let editAction = UIAlertAction(title: "Edit", style: .default) { (action) in
             let editor = CLImageEditor(image: self.image, delegate: self)!
             editor.setup()
@@ -199,6 +205,15 @@ class FeedbackInterfaceViewController: UIViewController {
 
         
         present(actionSheet, animated: true, completion: nil)
+    }
+    
+    private func showImagePreview() {
+        guard let image = image else {
+            return
+        }
+        
+        let vc = ImagePreviewViewController(image: image)
+        navigationController?.pushViewController(vc, animated: true)
     }
     
     @objc private func imageButtonPressed() {
@@ -232,7 +247,7 @@ class FeedbackInterfaceViewController: UIViewController {
         var imageData: Data?
         if let image = image {
             let resizedImage = image.resizeToUploadingSize()
-            imageData = resizedImage.jpegData(compressionQuality: 20)
+            imageData = UIImageJPEGRepresentation(resizedImage, 20)
         }
         
         reporter?.submit(title: titleText, body: bodyField.text, email: emailText, screenshotData: imageData, completionHandler: { (result) in
@@ -255,8 +270,8 @@ class FeedbackInterfaceViewController: UIViewController {
     }
     
     private func showRequiredFieldAlert() {
-        let alert = UIAlertController(title: "Information Required", message: "Your email address and a description is required.", preferredStyle: UIAlertController.Style.alert)
-        alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
+        let alert = UIAlertController(title: "Information Required", message: "Your email address and a description is required.", preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
@@ -278,10 +293,10 @@ class FeedbackInterfaceViewController: UIViewController {
     @objc private func adjustForKeyboard(notification: Notification) {
         let userInfo = notification.userInfo!
         
-        let keyboardScreenEndFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
+        let keyboardScreenEndFrame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
         
-        if notification.name == UIResponder.keyboardWillHideNotification {
+        if notification.name == Notification.Name.UIKeyboardWillHide {
             scrollView.contentInset = UIEdgeInsets(top: 50, left: 0, bottom: 0, right: 0)
         } else {
             scrollView.contentInset = UIEdgeInsets(top: 50, left: 0, bottom: keyboardViewEndFrame.height, right: 0)
@@ -385,7 +400,7 @@ class FeedbackInterfaceViewController: UIViewController {
     }()
     
     private let activitySpinner: UIActivityIndicatorView = {
-        let view = UIActivityIndicatorView(style: .gray)
+        let view = UIActivityIndicatorView(activityIndicatorStyle: .gray)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -407,8 +422,8 @@ class FeedbackInterfaceViewController: UIViewController {
 
 extension FeedbackInterfaceViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        if let pickedImage = info[.originalImage] as? UIImage {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+        if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
             image = pickedImage
             picker.dismiss(animated: true, completion: nil)
         }
@@ -441,8 +456,8 @@ class FeedbackViewController: UINavigationController {
     override func viewDidLoad() {
         super.viewDidLoad()
 		
-		let navigationTitleFont = UIFont.systemFont(ofSize: 18, weight: .thin)
-		navigationBar.titleTextAttributes = [.font: navigationTitleFont]
+        let navigationTitleFont = UIFont.systemFont(ofSize: 18, weight: UIFont.Weight.thin)
+        navigationBar.titleTextAttributes = [NSAttributedStringKey.font: navigationTitleFont]
 		navigationBar.barTintColor = UIColor.white
         
         viewControllers = [FeedbackInterfaceViewController(reporter: reporter, shouldFetchScreenshot: shouldFetchScreenshot)]

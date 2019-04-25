@@ -17,7 +17,8 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-		self.feedback = FeedbackReporter(options: feedbackReportingOptions, datasource: self)
+        self.feedback = FeedbackReporter(options: feedbackReportingOptions)
+        self.feedback.datasource = self
         
         view.backgroundColor = UIColor.white
         
@@ -34,12 +35,12 @@ class ViewController: UIViewController {
         label.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -50).isActive = true
     }
     
-    @objc func display() {
+    func display() {
         self.feedback.display(viewController: self)
     }
     
     private let button: UIButton = {
-        let button = UIButton(type: .roundedRect)
+        let button = UIButton(type: UIButtonType.roundedRect)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Provide Feedback", for: .normal)
         button.setTitleColor(UIColor.white, for: .normal)

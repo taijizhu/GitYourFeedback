@@ -2,7 +2,7 @@
 
 [![Platform](https://img.shields.io/cocoapods/p/Typist.svg?style=flat)](https://github.com/gabek/GitYourFeedback)
 [![version](https://img.shields.io/badge/version-0.1.1-brightgreen.svg)](https://github.com/gabek/GitYourFeedback)
-![Swift Version](https://img.shields.io/badge/swift-4.2-orange.svg?style=flat)
+![Swift Version](https://img.shields.io/badge/swift-3.0-orange.svg?style=flat)
 
 A lot of organizations run on GitHub, not just for the code repositories, but also for the heavy use of Issues, the bug tracking/feedback reporting tool.  Instead of routing your users to GitHub and expecting them to file issues, this is an option to support it right from inside your iOS application.
 
@@ -61,10 +61,10 @@ Alternatively you can create your own struct that adheres to the `FeedbackOption
 
 
 ```
-let feedbackReporter = FeedbackReporter(options: feedbackOptions, datasource: self)
+let feedbackReporter = FeedbackReporter(options: feedbackOptions)
 ```
 
-You'll need to implement `FeedbackReporterDatasource` in order to tell the FeedbackReporter where to upload screenshots.  The simplest implementation would be something like:
+You'll also need to implement `FeedbackReporterDatasource` in order to tell the FeedbackReporter where to upload screenshots.  The simplest implementation would be something like:
 
 ```
 func uploadUrl(_ completionHandler: (String) -> Void) {
@@ -73,16 +73,15 @@ func uploadUrl(_ completionHandler: (String) -> Void) {
     completionHandler(url)
 }
 ```
-This is also where you could generate, possibly from your backend, a signed URL so the Google Cloud Storage bucket doesn't need to be completely public.
 
-
-There are other methods you can implement as well, to provide additional information in the issues that get filed.
+And there are other methods you can implement as well, to provide additional information in the issues that get filed.
 
 ```
 func additionalData() -> String?
 func issueLabels() -> [String]?
 ```
 
+This is also where you could generate, possibly from your backend, a signed URL so the Google Cloud Storage bucket doesn't need to be completely public.
 
 ## Presenting the Feedback interface
 
