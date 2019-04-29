@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct FeedbackReportingOptions: FeedbackOptions {
+public class FeedbackReportingOptions: FeedbackOptions {
     public init(token: String, user: String, repo: String) {
         self.token = token
         self.user = user

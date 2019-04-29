@@ -21,7 +21,7 @@ import Mustache
 	@objc optional func issueLabels() -> [String]?
 }
 
-public protocol FeedbackOptions {
+@objc public protocol FeedbackOptions {
     /// The Personal Access Token to access a repository
     var token: String { get set }
     /// The user that generated the above Personal Access Token and has access to the repository.
@@ -30,7 +30,7 @@ public protocol FeedbackOptions {
     var repo: String { get set }
 }
 
-open class FeedbackReporter {
+@objc open class FeedbackReporter : NSObject {
     
     private (set) var options: FeedbackOptions?
     open var datasource: FeedbackReporterDatasource?
@@ -40,6 +40,7 @@ open class FeedbackReporter {
     var feedbackViewController: FeedbackViewController?
     
     public init(options: FeedbackOptions) {
+        super.init()
         self.options = options
         
         self.listenForScreenshot()
@@ -53,7 +54,7 @@ open class FeedbackReporter {
         }
     }
 	
-    public func display(viewController: UIViewController? = nil, shouldFetchScreenshot: Bool = false) {
+    @objc public func display(viewController: UIViewController? = nil, shouldFetchScreenshot: Bool = false) {
         guard let topmostViewController = UIViewController.topmostViewController else {
             fatalError("No view controller to present FeedbackManager on")
         }
@@ -197,7 +198,7 @@ open class FeedbackReporter {
         return request
     }
     
-    public static var userEmailAddress: String? {
+    @objc public static var userEmailAddress: String? {
         set {
             Helpers.saveEmail(email: newValue)
         }
