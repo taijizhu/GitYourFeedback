@@ -39,14 +39,13 @@ import Mustache
     
     var feedbackViewController: FeedbackViewController?
     
-    public init(options: FeedbackOptions) {
+    @objc public init(options: FeedbackOptions) {
         super.init()
         self.options = options
-        
         self.listenForScreenshot()
     }
 
-    private func listenForScreenshot() {
+    @objc public func listenForScreenshot() {
         let name = NSNotification.Name.UIApplicationUserDidTakeScreenshot
         
         NotificationCenter.default.addObserver(forName: name, object: nil, queue: OperationQueue.main) { notification in
