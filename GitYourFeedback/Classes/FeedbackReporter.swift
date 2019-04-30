@@ -33,7 +33,7 @@ import Mustache
 @objc open class FeedbackReporter : NSObject {
     
     private (set) var options: FeedbackOptions?
-    open var datasource: FeedbackReporterDatasource?
+    @objc open var datasource: FeedbackReporterDatasource?
     
     private let googleStorage = GoogleStorage()
     
