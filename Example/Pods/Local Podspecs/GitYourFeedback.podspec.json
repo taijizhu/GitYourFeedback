@@ -1,6 +1,6 @@
 {
   "name": "GitYourFeedback",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "summary": "Let users submit feedback and bugs with screenshots, directly from your iOS app to Github Issues.",
   "description": "Instead of routing your users to GitHub and expecting them to file issues, or copying and pasting from emails into GitHub, allow users to easily submit feedback and bugs right from within your application.",
   "homepage": "https://github.com/gabek/GitYourFeedback",
@@ -17,7 +17,7 @@
   },
   "source": {
     "git": "https://github.com/gabek/GitYourFeedback.git",
-    "tag": "0.1.0"
+    "tag": "0.1.1"
   },
   "social_media_url": "https://twitter.com/gabek",
   "platforms": {
@@ -33,6 +33,15 @@
 
     ],
     "CLImageEditor/TextTool": [
+
+    ],
+    "AWSS3": [
+
+    ],
+    "AWSCore": [
+
+    ],
+    "Bolts-Swift": [
 
     ]
   }

@@ -1,5 +1,9 @@
 use_frameworks!
+platform :ios, '10.0'
+inhibit_all_warnings!
 
 target 'GitYourFeedback_Example' do
   pod 'GitYourFeedback', :path => '../'
+  pod 'AWSS3'
+  pod 'Bolts-Swift'
 end

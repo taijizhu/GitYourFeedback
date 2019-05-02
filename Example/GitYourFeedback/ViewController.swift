@@ -35,8 +35,8 @@ class ViewController: UIViewController {
         label.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -50).isActive = true
     }
     
-    func display() {
-        self.feedback.display(viewController: self)
+    @objc func display() {
+        self.feedback.display(viewController: self, shouldFetchScreenshot:  true)
     }
     
     private let button: UIButton = {

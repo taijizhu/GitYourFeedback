@@ -33,8 +33,11 @@ Instead of routing your users to GitHub and expecting them to file issues, or co
   s.source_files = 'GitYourFeedback/Classes/**/*'
 
   s.resources = 'GitYourFeedback/Assets/**/*'
-
+  
   s.dependency 'GRMustache.swift'
   s.dependency 'CLImageEditor'
   s.dependency 'CLImageEditor/TextTool'
+  s.dependency 'AWSS3'
+  s.dependency 'AWSCore'
+  s.dependency 'Bolts-Swift'
 end

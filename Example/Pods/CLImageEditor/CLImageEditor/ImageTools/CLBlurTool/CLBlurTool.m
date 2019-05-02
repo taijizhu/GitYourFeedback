@@ -7,7 +7,7 @@
 
 #import "CLBlurTool.h"
 
-static NSString* const kCLBlurToolNormalIconName = @"nonrmalIconAssetsName";
+static NSString* const kCLBlurToolNormalIconName = @"normalIconAssetsName";
 static NSString* const kCLBlurToolCircleIconName = @"circleIconAssetsName";
 static NSString* const kCLBlurToolBandIconName = @"bandIconAssetsName";
 
@@ -104,7 +104,7 @@ typedef NS_ENUM(NSUInteger, CLBlurType)
     _menuScroll.transform = CGAffineTransformMakeTranslation(0, self.editor.view.height-_menuScroll.top);
     [UIView animateWithDuration:kCLImageToolAnimationDuration
                      animations:^{
-                         _menuScroll.transform = CGAffineTransformIdentity;
+                         self->_menuScroll.transform = CGAffineTransformIdentity;
                      }];
     
     [self setDefaultParams];
@@ -119,10 +119,10 @@ typedef NS_ENUM(NSUInteger, CLBlurType)
     
     [UIView animateWithDuration:kCLImageToolAnimationDuration
                      animations:^{
-                         _menuScroll.transform = CGAffineTransformMakeTranslation(0, self.editor.view.height-_menuScroll.top);
+                         self->_menuScroll.transform = CGAffineTransformMakeTranslation(0, self.editor.view.height-self->_menuScroll.top);
                      }
                      completion:^(BOOL finished) {
-                         [_menuScroll removeFromSuperview];
+                         [self->_menuScroll removeFromSuperview];
                      }];
 }
 
@@ -130,19 +130,29 @@ typedef NS_ENUM(NSUInteger, CLBlurType)
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         UIActivityIndicatorView *indicator = [CLImageEditorTheme indicatorView];
-        indicator.center = CGPointMake(_handlerView.width/2, _handlerView.height/2);
-        [_handlerView addSubview:indicator];
+        indicator.center = CGPointMake(self->_handlerView.width/2, self->_handlerView.height/2);
+        [self->_handlerView addSubview:indicator];
         [indicator startAnimating];
     });
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        UIImage *blurImage = [_originalImage gaussBlur:_blurSlider.value];
-        UIImage *image = [self buildResultImage:_originalImage withBlurImage:blurImage];
+        UIImage *blurImage = [self->_originalImage gaussBlur:[self getBlurValue]];
+        UIImage *image = [self buildResultImage:self->_originalImage withBlurImage:blurImage];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             completionBlock(image, nil, nil);
         });
     });
+}
+
+- (CGFloat)getBlurValue
+{
+    __block CGFloat value = 0;
+    
+    safe_dispatch_sync_main(^{
+        value = self->_blurSlider.value;
+    });
+    return value;
 }
 
 #pragma mark- 
@@ -254,7 +264,7 @@ typedef NS_ENUM(NSUInteger, CLBlurType)
 - (void)sliderDidChange:(UISlider*)slider
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        _blurImage = [_thumbnailImage gaussBlur:_blurSlider.value];
+        self->_blurImage = [self->_thumbnailImage gaussBlur:[self getBlurValue]];
         [self buildThumbnailImage];
     });
 }
@@ -268,7 +278,7 @@ typedef NS_ENUM(NSUInteger, CLBlurType)
     inProgress = YES;
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        UIImage *image = [self buildResultImage:_thumbnailImage withBlurImage:_blurImage];
+        UIImage *image = [self buildResultImage:self->_thumbnailImage withBlurImage:self->_blurImage];
         
         [self.editor.imageView performSelectorOnMainThread:@selector(setImage:) withObject:image waitUntilDone:NO];
         inProgress = NO;
@@ -309,8 +319,14 @@ typedef NS_ENUM(NSUInteger, CLBlurType)
 
 - (UIImage*)circleBlurImage:(UIImage*)image withBlurImage:(UIImage*)blurImage
 {
-    CGFloat ratio = image.size.width / self.editor.imageView.width;
-    CGRect frame  = _circleView.frame;
+    __block CGFloat ratio = 1;
+    __block CGRect frame = CGRectZero;
+    
+    safe_dispatch_sync_main(^{
+        ratio = image.size.width / self.editor.imageView.width;
+        frame  = self->_circleView.frame;
+    });
+    
     frame.size.width  *= ratio;
     frame.size.height *= ratio;
     frame.origin.x *= ratio;
@@ -331,6 +347,12 @@ typedef NS_ENUM(NSUInteger, CLBlurType)
 
 - (UIImage*)bandBlurImage:(UIImage*)image withBlurImage:(UIImage*)blurImage
 {
+    __block CGFloat offset = 0;
+    
+    safe_dispatch_sync_main(^{
+        offset = self->_bandView.offset*image.size.width/self->_handlerView.width;
+    });
+    
     UIImage *mask = [CLImageEditorTheme imageNamed:[self class] image:@"band.png"];
     
     UIGraphicsBeginImageContext(image.size);
@@ -347,7 +369,7 @@ typedef NS_ENUM(NSUInteger, CLBlurType)
         
         CGContextTranslateCTM(context, Tx, Ty);
         CGContextRotateCTM(context, _bandView.rotation);
-        CGContextTranslateCTM(context, 0, _bandView.offset*image.size.width/_handlerView.width);
+        CGContextTranslateCTM(context, 0, offset);
         CGContextScaleCTM(context, 1, _bandView.scale);
         CGContextTranslateCTM(context, -Tx, -Ty);
         

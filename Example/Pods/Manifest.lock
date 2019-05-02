@@ -1,27 +1,47 @@
 PODS:
-  - CLImageEditor (0.1.6):
-    - CLImageEditor/Core (= 0.1.6)
-  - CLImageEditor/Core (0.1.6)
-  - CLImageEditor/TextTool (0.1.6):
+  - AWSCore (2.9.7)
+  - AWSS3 (2.9.7):
+    - AWSCore (= 2.9.7)
+  - Bolts-Swift (1.4.0)
+  - CLImageEditor (0.2.4):
+    - CLImageEditor/Core (= 0.2.4)
+  - CLImageEditor/Core (0.2.4)
+  - CLImageEditor/TextTool (0.2.4):
     - CLImageEditor/Core
-  - GitYourFeedback (0.1.0):
+  - GitYourFeedback (0.1.1):
+    - AWSCore
+    - AWSS3
+    - Bolts-Swift
     - CLImageEditor
     - CLImageEditor/TextTool
     - GRMustache.swift
   - GRMustache.swift (2.0.0)
 
 DEPENDENCIES:
+  - AWSS3
+  - Bolts-Swift
   - GitYourFeedback (from `../`)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - AWSCore
+    - AWSS3
+    - Bolts-Swift
+    - CLImageEditor
+    - GRMustache.swift
 
 EXTERNAL SOURCES:
   GitYourFeedback:
     :path: "../"
 
 SPEC CHECKSUMS:
-  CLImageEditor: a0fa2fefc7b2ad611f2116dccbe3db5621f70301
-  GitYourFeedback: 3bbba0f68e29e17ecbb6c0058a52e09722f2a126
+  AWSCore: c98ab96784580d7a141c6f1999aa919ef45a312c
+  AWSS3: 653807428bfb6368dbe54fe1c7f0b81bffa5dba7
+  Bolts-Swift: 650d72e8017721b1a6bbe43d542c4578f8e5ba6f
+  CLImageEditor: dc3e5358f641368da3a76fc1c744a4c2ceb270ad
+  GitYourFeedback: be2380c87e9a7c5e5090cbde3a10808f9f881057
   GRMustache.swift: 8a547c12bea16052071b2b540af83d770075f0eb
 
-PODFILE CHECKSUM: ecbecaa659d35b1b54d3667d6999c056253c5699
+PODFILE CHECKSUM: e20d23fce02af49edd9df8a590a6c62983104a75
 
-COCOAPODS: 1.1.1
+COCOAPODS: 1.5.3

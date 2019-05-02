@@ -11,6 +11,9 @@ import UIKit
 
 import Mustache
 
+import AWSS3
+import BoltsSwift
+
 /// This is required in order to know where to upload your screenshot to at the time of submission.
 /// Generate the filename any way you like as long as the result is a valid Google Cloud Storage destination.
 @objc public protocol FeedbackReporterDatasource {
@@ -30,6 +33,41 @@ import Mustache
     var repo: String { get set }
 }
 
+/*
+- (void) startupAWS
+    {
+        
+        AWSCognitoCredentialsProvider *credentialsProvider = [[AWSCognitoCredentialsProvider alloc]
+            initWithRegionType:AWSRegionUSEast1
+            identityPoolId:@"us-east-1:6bb629b9-3663-420e-9086-631505d8bc02"];
+        
+        AWSServiceConfiguration *configuration = [[AWSServiceConfiguration alloc] initWithRegion:AWSRegionUSEast1 credentialsProvider:credentialsProvider];
+        
+        [AWSServiceManager defaultServiceManager].defaultServiceConfiguration = configuration;
+        
+        [AWSS3TransferManager registerS3TransferManagerWithConfiguration:configuration forKey:@"USEast1S3TransferManager"];
+        
+        [AWSRekognition registerRekognitionWithConfiguration:configuration forKey:@"USEast1Rekognition"];
+        
+        
+        
+}
+*/
+
+extension String {
+    
+    static func random(length: Int = 20) -> String {
+        let base = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        var randomString: String = ""
+        
+        for _ in 0..<length {
+            let randomValue = arc4random_uniform(UInt32(base.count))
+            randomString += "\(base[base.index(base.startIndex, offsetBy: Int(randomValue))])"
+        }
+        return randomString
+    }
+}
+
 @objc open class FeedbackReporter : NSObject {
     
     private (set) var options: FeedbackOptions?
@@ -43,8 +81,58 @@ import Mustache
         super.init()
         self.options = options
         self.listenForScreenshot()
+        self.startupAWS()
     }
 
+    @objc public func startupAWS() {
+        let credentialProvider = AWSCognitoCredentialsProvider(regionType: .USEast1, identityPoolId: "us-east-1:6bb629b9-3663-420e-9086-631505d8bc02")
+        let configuration = AWSServiceConfiguration(region: .USEast1, credentialsProvider: credentialProvider)
+        AWSServiceManager.default().defaultServiceConfiguration = configuration
+        AWSS3TransferManager.register(with: configuration!, forKey: "USEast1S3TransferManager")
+        
+    }
+    
+
+    
+    public func uploadAWS(screenshotData: Data!) -> Task<URL> {
+        let taskCompletionSource = TaskCompletionSource<URL>()
+        
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        do {
+            try screenshotData.write(to: url)
+        } catch {
+            taskCompletionSource.tryCancel
+        }
+        let randomString = String.random()
+        let remoteName = "screenshots/\(randomString)"
+        let S3BucketName = "iscache"
+        let uploadRequest = AWSS3TransferManagerUploadRequest()!
+        uploadRequest.body = url
+        uploadRequest.key = remoteName
+        uploadRequest.bucket = S3BucketName
+        uploadRequest.contentType = "image/png"
+        uploadRequest.acl = .publicRead
+        
+        let transferManager = AWSS3TransferManager.default()
+        transferManager.upload(uploadRequest).continueWith(block: { (task: AWSTask) -> Any? in
+            if let error = task.error {
+                print("Upload failed with error: (\(error.localizedDescription))")
+                taskCompletionSource.trySet(error:error)
+            }
+            
+            if task.result != nil {
+                let url = AWSS3.default().configuration.endpoint.url
+                let publicURL = url?.appendingPathComponent(uploadRequest.bucket!).appendingPathComponent(uploadRequest.key!)
+                
+                print("Uploaded to:\(publicURL)")
+                taskCompletionSource.trySet(result:publicURL!)
+            }
+            return nil
+        })
+        
+        return taskCompletionSource.task
+    }
+    
     @objc public func listenForScreenshot() {
         let name = NSNotification.Name.UIApplicationUserDidTakeScreenshot
         
@@ -78,8 +166,15 @@ import Mustache
         let additionalDataString = datasource.additionalData?()
         
         if let screenshotData = screenshotData {
+            uploadAWS(screenshotData: screenshotData).continueOnSuccessWithTask( ) {task -> Task<URL> in
+                let screenshotURL = task
+                let issueBody = self.generateIssueContents(title: title, body: body, email: email, screenshotURL: screenshotURL.absoluteString, additionalData: additionalDataString)
+                self.createIssue(issueTitle: title, issueBody: issueBody, screenshotURL: screenshotURL.absoluteString, completionHandler: completionHandler)
+                let taskCompletionSource = TaskCompletionSource<URL>()
+                return taskCompletionSource.task
+            }
             
-            datasource.uploadUrl({ (googleStorageUrl) in
+            /*datasource.uploadUrl({ (googleStorageUrl) in
                 
                 var screenshotURL: String?
                 
@@ -97,7 +192,7 @@ import Mustache
                     let issueBody = self.generateIssueContents(title: title, body: body, email: email, screenshotURL: screenshotURL, additionalData: additionalDataString)
                     self.createIssue(issueTitle: title, issueBody: issueBody, screenshotURL: screenshotURL, completionHandler: completionHandler)
                 }
-            })
+            })*/
 
         } else {
             let issueBody = self.generateIssueContents(title: title, body: body, email: email, screenshotURL: nil, additionalData: additionalDataString)
